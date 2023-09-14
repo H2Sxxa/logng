@@ -1,0 +1,15 @@
+[project]
+name = "logng"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "H2Sxxa", email = "h2sxxa0w0@gmail.com"},
+]
+dependencies = ["colorama"]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
