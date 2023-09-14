@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Callable, Tuple
+from typing import Callable, Tuple
 from logng.base.enums import LogLevel
 from logng.base.intfs import ILogger, TemplateLogger
 
