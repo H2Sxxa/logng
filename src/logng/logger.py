@@ -2,7 +2,7 @@ from functools import partialmethod
 from types import FrameType
 from logng.base.enums import LogBlock, LogLevel
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, List, TextIO, Tuple
+from typing import TYPE_CHECKING, Any, Callable, List, TextIO, Tuple
 from colorama import Fore, Style
 from platform import system as plt_sys
 from time import strftime, localtime
@@ -14,7 +14,7 @@ from logng.base.intfs import ILogger
 if TYPE_CHECKING:
 
     class _CallLog:
-        def __call__(self, *msg: str) -> None:
+        def __call__(self, *msg: Any) -> None:
             return msg
 
 
@@ -74,7 +74,7 @@ class Logger(ILogger):
         global current_logger
         current_logger = self
 
-    def log(self, level: LogLevel, *msg: str) -> None:
+    def log(self, level: LogLevel, *msg: Any) -> None:
         if level.value < self.config.loglevel.value:
             return
         for index, std in enumerate(self.config.stdouts):
