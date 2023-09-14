@@ -1,15 +1,10 @@
-from logng.logger import get_or_create_logger, LogConfig
-from sys import stdout
+from logng.shared import info, set_logger, warn
+from logng.logger import Logger, LogConfig
 
-logf = open("latest.log", "w")
-logger = get_or_create_logger(config=LogConfig(stdouts=[stdout, logf], maxcount=1))
+lg = Logger()
+lg.info("hello info")
 
 
-async def async_main():
-    for i in range(1000):
-        logger.info("hello info", i)
-    logger.warn("warn,finish")
-
-from asyncio import run as run_async
-
-run_async(async_main())
+set_logger(Logger(LogConfig(locate_back=1)))
+info("hello")
+warn("hello")

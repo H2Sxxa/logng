@@ -1,3 +1,6 @@
-from . import intf, logtype
+from . import enums, intfs
 
-__all__ = ["intf", "logtype"]
+__all__ = ["intfs", "enums"]
+from . import enums, intfs
+
+__all__ = ["enums", "intfs"]

@@ -1,5 +1,6 @@
 from functools import partialmethod
-from logng.base.logtype import LogBlock, LogLevel
+from types import FrameType
+from logng.base.enums import LogBlock, LogLevel
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, List, TextIO, Tuple
 from colorama import Fore, Style
@@ -7,7 +8,7 @@ from time import strftime, localtime
 import sys, inspect
 
 
-from .base.intf import ILogger
+from .base.intfs import ILogger
 
 
 if TYPE_CHECKING:
@@ -37,6 +38,7 @@ class LogConfig:
         if level == LogLevel.TRACE
         else Fore.LIGHTCYAN_EX
     )
+    loglevel: LogLevel = LogLevel.INFO
     logblocks: Tuple[LogBlock] = (
         LogBlock.LEVEL_COLOR,
         LogBlock.TIME,
@@ -51,6 +53,7 @@ class LogConfig:
         "[",
         "]",
     )
+    locate_back: int = 0
 
 
 current_logger = None
@@ -71,6 +74,8 @@ class Logger(ILogger):
         current_logger = self
 
     def log(self, level: LogLevel, *msg: str) -> None:
+        if level.value < self.config.loglevel.value:
+            return
         for index, std in enumerate(self.config.stdouts):
             for lb in self.config.logblocks:
                 if isinstance(lb, str):
@@ -95,13 +100,19 @@ class Logger(ILogger):
                             if lb == LogBlock.TIME
                             else level.name
                             if lb == LogBlock.LEVEL
-                            else inspect.getmodule(inspect.stack()[1][0]).__name__
+                            else inspect.getmodule(self.__locate_stack()).__name__
                             if lb == LogBlock.TARGET
                             else ""
                         )
                         + self.config.logblockwrap[1]
                     )
         return super().log(level, *msg)
+
+    def __locate_stack(self) -> FrameType:
+        sk = inspect.stack()[1][0]
+        for _ in range(self.config.locate_back + 1):
+            sk = sk.f_back
+        return sk
 
     def flush(self):
         # TODO don't know how to process yet
@@ -112,6 +123,10 @@ class Logger(ILogger):
     error: "_CallLog" = partialmethod(log, LogLevel.ERROR)
     trace: "_CallLog" = partialmethod(log, LogLevel.TRACE)
     debug: "_CallLog" = partialmethod(log, LogLevel.DEBUG)
+
+    def set_log_level(self, level: LogLevel) -> None:
+        self.config.loglevel = level
+        return super().set_log_level(level)
 
 
 def get_or_create_logger(config: LogConfig = LogConfig()) -> Logger:

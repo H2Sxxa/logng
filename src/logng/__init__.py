@@ -1,3 +1,3 @@
-from . import base, logger
+from . import base, logger, shared
 
-__all__ = ["base", "logger"]
+__all__ = ["base", "logger", "shared"]
