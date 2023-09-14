@@ -11,7 +11,7 @@
 
 # What's this?
 
-A loging library, intending to simplify the use of logger and easy to configure and implements.
+A logging library, intending to simplify the use of logger and easy to configure or implement.
 
 # Install
 
