@@ -7,8 +7,7 @@ from colorama import Fore, Style
 from time import strftime, localtime
 import sys, inspect
 
-
-from .base.intfs import ILogger
+from logng.base.intfs import ILogger
 
 
 if TYPE_CHECKING:
