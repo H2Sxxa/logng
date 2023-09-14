@@ -3,7 +3,8 @@ from types import FrameType
 from logng.base.enums import LogBlock, LogLevel
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, List, TextIO, Tuple
-from colorama import Fore, Style
+from colorama import Fore, Style, init as initcolor
+from platform import system as plt_sys
 from time import strftime, localtime
 import sys, inspect
 
@@ -15,6 +16,15 @@ if TYPE_CHECKING:
     class _CallLog:
         def __call__(self, *msg: str) -> None:
             return msg
+
+
+try:
+    if plt_sys() == "Windows":
+        initcolor(wrap=True)
+    else:
+        initcolor(wrap=False)
+except:
+    pass
 
 
 @dataclass
