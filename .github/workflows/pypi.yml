@@ -6,13 +6,17 @@ name: PYPI Publish
 on:
   release:
     types: [created]
-
+  workflow_dispatch:
+  
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
   pypi-publish:
-    name: Test Lib & Publish
+    name: Publish
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+    needs: test
     steps:
     - uses: actions/checkout@v3
     - uses: pdm-project/setup-pdm@v3
@@ -22,8 +26,7 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.10'
-    - name: Setup & Publish Lib
+    - name: Setup & Publish
       run: |
         pdm install
-    - name: Publish package distributions to PyPI
-      run: pdm publish
+        pdm publish

@@ -1,0 +1,24 @@
+name: Library Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+  workflow_dispatch:
+jobs:
+  build:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pdm-project/setup-pdm@v3
+      with:
+        version: 'head'
+    - name: Install & Build
+      run: |
+        pdm install
+        pdm build
+    - name: Run tests
+      run: pdm run ./tests/test.py
