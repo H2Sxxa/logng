@@ -6,6 +6,6 @@ lg = Logger(LogConfig(stdouts=(VirtualAttyStdout,)))
 lg.info("hello info")
 
 
-set_logger(Logger(LogConfig(locate_back=1, stdouts=(VirtualAttyStdout,))))
+set_logger(Logger(LogConfig(stdouts=(VirtualAttyStdout,))))
 info("hello")
 warn("hello")

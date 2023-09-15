@@ -28,7 +28,7 @@ It's a implementation of the `ILogger`, with the high configurability.
 ```python
 from logng.logger import Logger, LogConfig
 
-lg = Logger(LogConfig())
+lg = Logger()
 lg.info("hello info")
 ```
 
@@ -40,7 +40,7 @@ You can implement `ILogger` yourself and set the logger here.
 from logng.shared import set_logger, info, warn
 from logng.logger import Logger, LogConfig
 
-set_logger(Logger(LogConfig(locate_back=1)))
+set_logger(Logger())
 info("hello")
 warn("hello")
 ```

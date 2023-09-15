@@ -52,8 +52,6 @@ class LogConfig:
         "[",
         "]",
     )
-    locate_back: int = 0
-
 
 current_logger = None
 
@@ -105,7 +103,7 @@ class Logger(ILogger):
                             if lb == LogBlock.TIME
                             else level.name
                             if lb == LogBlock.LEVEL
-                            else inspect.getmodule(self.__locate_stack()).__name__
+                            else self.__locate_stack()
                             if lb == LogBlock.TARGET
                             else ""
                         )
@@ -113,11 +111,9 @@ class Logger(ILogger):
                     )
         return super().log(level, *msg)
 
-    def __locate_stack(self) -> FrameType:
-        sk = inspect.stack()[1][0]
-        for _ in range(self.config.locate_back + 1):
-            sk = sk.f_back
-        return sk
+    def __locate_stack(self) -> str:
+        fr = inspect.getmodule(inspect.stack()[-1][0])
+        return fr.__name__ if fr is not None else "__unknown__"
 
     def flush(self):
         # TODO don't know how to process yet
