@@ -1,6 +1,6 @@
 from logng.shared import info, set_logger, warn
 from logng.logger import Logger, LogConfig
-from logng.utils import VirtualAttyStdout
+from logng.outputs import VirtualAttyStdout
 
 lg = Logger(LogConfig(stdouts=(VirtualAttyStdout,)))
 lg.info("hello info")
