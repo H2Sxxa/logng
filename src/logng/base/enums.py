@@ -20,3 +20,8 @@ class LogBlock(Enum):
     MSG = (3, NONEED_WRAP)
     LEVEL_COLOR = (4, NONEED_WRAP)
     RESET_COLOR = (5, NONEED_WRAP)
+
+
+class WrapStr(str):
+    def to_str(self):
+        return str(self)

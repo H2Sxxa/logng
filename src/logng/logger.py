@@ -1,6 +1,6 @@
 from functools import partialmethod
 from types import FrameType
-from logng.base.enums import LogBlock, LogLevel
+from logng.base.enums import LogBlock, LogLevel, WrapStr
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, List, TextIO, Tuple
 from colorama import Fore, Style
@@ -78,7 +78,13 @@ class Logger(ILogger):
         for index, std in enumerate(self.config.stdouts):
             for lb in self.config.logblocks:
                 if isinstance(lb, str):
-                    std.write(lb)
+                    std.write(
+                        lb
+                        if not isinstance(lb, WrapStr)
+                        else self.config.logblockwrap[0]
+                        + lb.to_str()
+                        + self.config.logblockwrap[1]
+                    )
                 elif not lb.value[1]:
                     std.write(
                         (
