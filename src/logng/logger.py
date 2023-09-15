@@ -4,7 +4,6 @@ from logng.base.enums import LogBlock, LogLevel
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, List, TextIO, Tuple
 from colorama import Fore, Style
-from platform import system as plt_sys
 from time import strftime, localtime
 import sys, inspect
 
@@ -54,7 +53,6 @@ class LogConfig:
         "]",
     )
     locate_back: int = 0
-    allow_noatty_color: bool = False
 
 
 current_logger = None
@@ -87,11 +85,9 @@ class Logger(ILogger):
                             " ".join(map(str, msg))
                             if lb == LogBlock.MSG
                             else self.config.level_color(level)
-                            if (self.isatty[index] or self.config.allow_noatty_color)
-                            and lb == LogBlock.LEVEL_COLOR
+                            if self.isatty[index] and lb == LogBlock.LEVEL_COLOR
                             else Style.RESET_ALL
-                            if (self.isatty[index] or self.config.allow_noatty_color)
-                            and lb == LogBlock.RESET_COLOR
+                            if self.isatty[index] and lb == LogBlock.RESET_COLOR
                             else ""
                         )
                     )

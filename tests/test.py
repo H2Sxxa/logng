@@ -1,11 +1,12 @@
 from logng.shared import info, set_logger, warn
 from logng.logger import Logger, LogConfig
+from logng.outputs import VirtualAttyStdout
 
 
-lg = Logger(LogConfig(allow_noatty_color=True))
+lg = Logger(LogConfig(stdouts=(VirtualAttyStdout,)))
 lg.info("hello info")
 
 
-set_logger(Logger(LogConfig(locate_back=1, allow_noatty_color=True)))
+set_logger(Logger(LogConfig(locate_back=1, stdouts=(VirtualAttyStdout,))))
 info("hello")
 warn("hello")
