@@ -16,7 +16,7 @@ for i in range(11):
     if i != 10:
         lg.info_atty(True, i)
     else:
-        warn("crash in", i)
+        warn("end in", i)
         break
     lg.flush()
 

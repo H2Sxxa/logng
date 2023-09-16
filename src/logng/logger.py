@@ -1,8 +1,7 @@
 from functools import partialmethod
-from types import FrameType
 from logng.base.enums import LogBlock, LogLevel, WrapStr
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, List, TextIO, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Optional, TextIO, Tuple
 from colorama import Fore, Style
 from time import strftime, localtime
 import sys, inspect
@@ -39,6 +38,7 @@ class LogConfig:
     """
 
     stdouts: Tuple[TextIO] = (sys.stdout,)
+    stderrs: Tuple[TextIO] = ()  # will also print to stdout
     maxcount: int = None
     timeformat: str = "%D %T"
     level_color: Callable[[LogLevel], str] = (
@@ -101,7 +101,8 @@ class Logger(ILogger):
 
             set_logger(self)
 
-    def __format_log(self, std: TextIO, isatty: bool, level: LogLevel, *msg):
+    def __format_log(self, std: TextIO, isatty: Optional[bool], level: LogLevel, *msg):
+        isatty = std.isatty() if isatty == None else isatty
         for lb in self.config.logblocks:
             if isinstance(lb, str):
                 std.write(
@@ -150,6 +151,9 @@ class Logger(ILogger):
             return
         for std in self._get_outs_fromatty(isatty):
             self.__format_log(std, isatty, level, *msg)
+        if level == LogLevel.ERROR:
+            for stderr in self.config.stderrs:
+                self.__format_log(stderr, None, level, *msg)
 
     def __locate_stack(self) -> str:
         fr = inspect.getmodule(inspect.stack()[-1][0])
