@@ -16,6 +16,21 @@ if TYPE_CHECKING:
         def __call__(self, *msg: Any) -> None:
             return msg
 
+    class _CallLogAtty:
+        def __call__(self, isatty: bool = True, *msg: Any) -> None:
+            return (
+                isatty,
+                msg,
+            )
+
+    class _CallAtty:
+        def __call__(self, isatty: bool = True) -> None:
+            return isatty
+
+    class _CallJust:
+        def __call__(self) -> None:
+            ...
+
 
 @dataclass
 class LogConfig:
@@ -59,8 +74,13 @@ current_logger = None
 
 
 class Logger(ILogger):
+    """
+    sync is faster than async(?)
+    """
+
     config: LogConfig
-    isatty: List[bool]
+    _attyouts: Tuple[TextIO]
+    _commonouts: Tuple[TextIO]
 
     def __init__(self, config: LogConfig = LogConfig()) -> None:
         """
@@ -68,7 +88,12 @@ class Logger(ILogger):
         """
         super().__init__()
         self.config = config
-        self.isatty = [std.isatty() for std in self.config.stdouts]
+        self._attyouts, self._commonouts = (), ()
+        for std in self.config.stdouts:
+            if std.isatty():
+                self._attyouts = (*self._attyouts, std)
+            else:
+                self._commonouts = (*self._commonouts, std)
         global current_logger
         current_logger = self
         if self.config.shared:
@@ -76,81 +101,102 @@ class Logger(ILogger):
 
             set_logger(self)
 
+    def __format_log(self, std: TextIO, isatty: bool, level: LogLevel, *msg):
+        for lb in self.config.logblocks:
+            if isinstance(lb, str):
+                std.write(
+                    lb
+                    if not isinstance(lb, WrapStr)
+                    else self.config.logblockwrap[0]
+                    + lb.to_str()
+                    + self.config.logblockwrap[1]
+                )
+            elif not lb.value[1]:
+                std.write(
+                    (
+                        " ".join(map(str, msg))
+                        if lb == LogBlock.MSG
+                        else self.config.level_color(level)
+                        if isatty and lb == LogBlock.LEVEL_COLOR
+                        else Style.RESET_ALL
+                        if isatty and lb == LogBlock.RESET_COLOR
+                        else ""
+                    )
+                )
+            else:
+                std.write(
+                    self.config.logblockwrap[0]
+                    + (
+                        strftime(self.config.timeformat, localtime())
+                        if lb == LogBlock.TIME
+                        else level.name
+                        if lb == LogBlock.LEVEL
+                        else self.__locate_stack()
+                        if lb == LogBlock.TARGET
+                        else ""
+                    )
+                    + self.config.logblockwrap[1]
+                )
+        if self.config.auto_newline:
+            std.write("\n")
+
     def log(self, level: LogLevel, *msg: Any) -> None:
+        self.log_atty(level, True, *msg)
+        self.log_atty(level, False, *msg)
+        return super().log(level, *msg)
+
+    def log_atty(self, level: LogLevel, isatty: bool, *msg: Any) -> None:
         if level.value < self.config.loglevel.value:
             return
-        for index, std in enumerate(self.config.stdouts):
-            for lb in self.config.logblocks:
-                if isinstance(lb, str):
-                    std.write(
-                        lb
-                        if not isinstance(lb, WrapStr)
-                        else self.config.logblockwrap[0]
-                        + lb.to_str()
-                        + self.config.logblockwrap[1]
-                    )
-                elif not lb.value[1]:
-                    std.write(
-                        (
-                            " ".join(map(str, msg))
-                            if lb == LogBlock.MSG
-                            else self.config.level_color(level)
-                            if self.isatty[index] and lb == LogBlock.LEVEL_COLOR
-                            else Style.RESET_ALL
-                            if self.isatty[index] and lb == LogBlock.RESET_COLOR
-                            else ""
-                        )
-                    )
-                else:
-                    std.write(
-                        self.config.logblockwrap[0]
-                        + (
-                            strftime(self.config.timeformat, localtime())
-                            if lb == LogBlock.TIME
-                            else level.name
-                            if lb == LogBlock.LEVEL
-                            else self.__locate_stack()
-                            if lb == LogBlock.TARGET
-                            else ""
-                        )
-                        + self.config.logblockwrap[1]
-                    )
-            if self.config.auto_newline:
-                std.write("\n")
-        return super().log(level, *msg)
+        for std in self._get_outs_fromatty(isatty):
+            self.__format_log(std, isatty, level, *msg)
 
     def __locate_stack(self) -> str:
         fr = inspect.getmodule(inspect.stack()[-1][0])
         return fr.__name__ if fr is not None else "__unknown__"
 
     def flush(self):
-        for stdo in self.config.stdouts:
-            stdo.flush()
+        for std in self.config.stdouts:
+            std.flush()
         return super().flush()
 
-    def auto_newline(self, __b: bool = False) -> None:
+    def _get_outs_fromatty(self, isatty: bool = True):
+        return self._attyouts if isatty else self._commonouts
+
+    def flush_atty(self, isatty: bool = True):
+        for std in self._get_outs_fromatty(isatty):
+            std.flush()
+        return super().flush()
+
+    def auto_newline(self, __b: bool = True) -> None:
         self.config.auto_newline = __b
 
     def _write_to(self, __s: str) -> None:
-        for st in self.config.stdouts:
-            st.write(__s)
+        for std in self.config.stdouts:
+            std.write(__s)
 
     def _write_to_atty(self, __s: str, __atty: bool = True) -> None:
-        for i, s in enumerate(self.config.stdouts):
-            if self.isatty[i] and __atty:
-                s.write(__s)
-            elif not __atty and not self.isatty[i]:
-                s.write(__s)
+        if __atty:
+            for std in self._attyouts:
+                std.write(__s)
+        else:
+            for std in self._commonouts:
+                std.wrtie(__s)
 
-    goto_start = partialmethod(_write_to, "\r")
-    goto_start_atty = partialmethod(_write_to_atty, "\r")
-    newline = partialmethod(_write_to, "\n")
-    newline_atty = partialmethod(_write_to_atty, "\n")
+    goto_start: "_CallJust" = partialmethod(_write_to, "\r")
+    goto_start_atty: "_CallAtty" = partialmethod(_write_to_atty, "\r")
+    newline: "_CallJust" = partialmethod(_write_to, "\n")
+    newline_atty: "_CallAtty" = partialmethod(_write_to_atty, "\n")
     info: "_CallLog" = partialmethod(log, LogLevel.INFO)
     warn: "_CallLog" = partialmethod(log, LogLevel.WARN)
     error: "_CallLog" = partialmethod(log, LogLevel.ERROR)
     trace: "_CallLog" = partialmethod(log, LogLevel.TRACE)
     debug: "_CallLog" = partialmethod(log, LogLevel.DEBUG)
+    info_atty: "_CallLogAtty" = partialmethod(log_atty, LogLevel.INFO)
+    warn_atty: "_CallLogAtty" = partialmethod(log_atty, LogLevel.WARN)
+    error_atty: "_CallLogAtty" = partialmethod(log_atty, LogLevel.ERROR)
+    trace_atty: "_CallLogAtty" = partialmethod(log_atty, LogLevel.TRACE)
+    debug_atty: "_CallLogAtty" = partialmethod(log_atty, LogLevel.DEBUG)
 
     def set_log_level(self, level: LogLevel) -> None:
         self.config.loglevel = level

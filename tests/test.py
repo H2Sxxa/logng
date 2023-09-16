@@ -1,4 +1,4 @@
-from logng.shared import info, error
+from logng.shared import info, warn
 from logng.logger import Logger, LogConfig
 from logng.outputs import VirtualAttyStdout, FileOutput
 
@@ -6,15 +6,17 @@ lg = Logger(
     LogConfig(stdouts=(VirtualAttyStdout, FileOutput("latest.log")), shared=True)
 )
 
-lg.auto_newline()
 
+info("start")
 
-for i in range(1002):
-    lg.goto_start()
-    if i != 1000:
-        info(i)
+lg.auto_newline(False)
+
+for i in range(11):
+    lg.goto_start_atty()
+    if i != 10:
+        lg.info_atty(True, i)
     else:
-        error("crash in", i)
+        warn("crash in", i)
         break
     lg.flush()
 
