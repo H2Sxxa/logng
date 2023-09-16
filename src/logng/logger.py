@@ -52,6 +52,8 @@ class LogConfig:
         "[",
         "]",
     )
+    shared: bool = False
+
 
 current_logger = None
 
@@ -69,6 +71,10 @@ class Logger(ILogger):
         self.isatty = [std.isatty() for std in self.config.stdouts]
         global current_logger
         current_logger = self
+        if self.config.shared:
+            from .shared import set_logger
+
+            set_logger(self)
 
     def log(self, level: LogLevel, *msg: Any) -> None:
         if level.value < self.config.loglevel.value:
@@ -116,7 +122,8 @@ class Logger(ILogger):
         return fr.__name__ if fr is not None else "__unknown__"
 
     def flush(self):
-        # TODO don't know how to process yet
+        for stdo in self.config.stdouts:
+            stdo.flush()
         return super().flush()
 
     info: "_CallLog" = partialmethod(log, LogLevel.INFO)
