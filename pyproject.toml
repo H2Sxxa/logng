@@ -1,6 +1,6 @@
 [project]
 name = "logng"
-description = "A loging library, intending to simplify the use of logger and easy to configure and implements."
+description = "A logging library, intending to simplify the use of logger and easy to configure and implements."
 authors = [{ name = "H2Sxxa", email = "h2sxxa0w0@gmail.com" }]
 dependencies = ["colorama"]
 requires-python = ">=3.11"
