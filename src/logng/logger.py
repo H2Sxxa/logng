@@ -46,13 +46,13 @@ class LogConfig:
         " ",
         LogBlock.MSG,
         LogBlock.RESET_COLOR,
-        "\n",
     )
     logblockwrap: Tuple[str, str] = (
         "[",
         "]",
     )
     shared: bool = False
+    auto_newline: bool = True
 
 
 current_logger = None
@@ -115,6 +115,8 @@ class Logger(ILogger):
                         )
                         + self.config.logblockwrap[1]
                     )
+            if self.config.auto_newline:
+                std.write("\n")
         return super().log(level, *msg)
 
     def __locate_stack(self) -> str:
@@ -125,6 +127,19 @@ class Logger(ILogger):
         for stdo in self.config.stdouts:
             stdo.flush()
         return super().flush()
+
+    def goto_start(self):
+        self._write_to("\r")
+
+    def newline(self) -> None:
+        self._write_to("\n")
+
+    def auto_newline(self, __b: bool = False) -> None:
+        self.config.auto_newline = __b
+
+    def _write_to(self, __s: str) -> None:
+        for st in self.config.stdouts:
+            st.write(__s)
 
     info: "_CallLog" = partialmethod(log, LogLevel.INFO)
     warn: "_CallLog" = partialmethod(log, LogLevel.WARN)
