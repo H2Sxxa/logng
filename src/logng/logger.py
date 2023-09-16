@@ -128,12 +128,6 @@ class Logger(ILogger):
             stdo.flush()
         return super().flush()
 
-    def goto_start(self):
-        self._write_to("\r")
-
-    def newline(self) -> None:
-        self._write_to("\n")
-
     def auto_newline(self, __b: bool = False) -> None:
         self.config.auto_newline = __b
 
@@ -141,6 +135,17 @@ class Logger(ILogger):
         for st in self.config.stdouts:
             st.write(__s)
 
+    def _write_to_atty(self, __s: str, __atty: bool = True) -> None:
+        for i, s in enumerate(self.config.stdouts):
+            if self.isatty[i] and __atty:
+                s.write(__s)
+            elif not __atty and not self.isatty[i]:
+                s.write(__s)
+
+    goto_start = partialmethod(_write_to, "\r")
+    goto_start_atty = partialmethod(_write_to_atty, "\r")
+    newline = partialmethod(_write_to, "\n")
+    newline_atty = partialmethod(_write_to_atty, "\n")
     info: "_CallLog" = partialmethod(log, LogLevel.INFO)
     warn: "_CallLog" = partialmethod(log, LogLevel.WARN)
     error: "_CallLog" = partialmethod(log, LogLevel.ERROR)
