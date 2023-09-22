@@ -17,8 +17,8 @@ VirtualAttyStdout = __VirtualAttyStdout()
 class FileOutput:
     __outputio: TextIOWrapper
 
-    def __init__(self, path: str, mode="w") -> None:
-        self.__outputio = open(path, mode=mode)
+    def __init__(self, path: str, mode="w", *args, **kwargs) -> None:
+        self.__outputio = open(path, mode=mode, *args, **kwargs)
 
     def isatty(self) -> bool:
         return False

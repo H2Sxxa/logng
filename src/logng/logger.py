@@ -103,9 +103,10 @@ class Logger(ILogger):
 
     def __format_log(self, std: TextIO, isatty: Optional[bool], level: LogLevel, *msg):
         isatty = std.isatty() if isatty == None else isatty
+        log = ""
         for lb in self.config.logblocks:
             if isinstance(lb, str):
-                std.write(
+                log += (
                     lb
                     if not isinstance(lb, WrapStr)
                     else self.config.logblockwrap[0]
@@ -113,19 +114,17 @@ class Logger(ILogger):
                     + self.config.logblockwrap[1]
                 )
             elif not lb.value[1]:
-                std.write(
-                    (
-                        " ".join(map(str, msg))
-                        if lb == LogBlock.MSG
-                        else self.config.level_color(level)
-                        if isatty and lb == LogBlock.LEVEL_COLOR
-                        else Style.RESET_ALL
-                        if isatty and lb == LogBlock.RESET_COLOR
-                        else ""
-                    )
+                log += (
+                    " ".join(map(str, msg))
+                    if lb == LogBlock.MSG
+                    else self.config.level_color(level)
+                    if isatty and lb == LogBlock.LEVEL_COLOR
+                    else Style.RESET_ALL
+                    if isatty and lb == LogBlock.RESET_COLOR
+                    else ""
                 )
             else:
-                std.write(
+                log += (
                     self.config.logblockwrap[0]
                     + (
                         strftime(self.config.timeformat, localtime())
@@ -139,7 +138,8 @@ class Logger(ILogger):
                     + self.config.logblockwrap[1]
                 )
         if self.config.auto_newline:
-            std.write("\n")
+            log += "\n"
+        std.write(log)
 
     def log(self, level: LogLevel, *msg: Any) -> None:
         self.log_atty(level, True, *msg)
